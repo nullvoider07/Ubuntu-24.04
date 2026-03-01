@@ -47,6 +47,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gnome-system-monitor gnome-shell-extensions gnome-text-editor \
     # X11 Utilities
     x11-utils x11-xserver-utils xdg-utils \
+    # IP utils
+    iputils-ping inetutils-traceroute \
     # Window Management
     xdotool wmctrl psmisc \
     # Nautilus File Manager

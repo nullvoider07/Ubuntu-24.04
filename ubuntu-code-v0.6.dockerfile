@@ -1,4 +1,4 @@
-# xai/cua-ubuntu-24.04-gpu — AI Agent GUI Control Base
+# nullvoider/cua-ubuntu-24.04-gpu — AI Agent GUI Control Base
 FROM ubuntu:24.04
 
 # === Force EGL (early for all layers) ===
@@ -145,7 +145,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Upgrade pip to exactly 25.3
-RUN python3.14 -m pip install --upgrade pip==25.3
+RUN python3.14 -m pip install --upgrade pip==26.0.1
 
 # Create symlinks so `python` and `pip` point to 3.14.2
 RUN update-alternatives --install /usr/bin/python python /usr/local/bin/python3.14 100 \
@@ -523,6 +523,23 @@ RUN LATEST_VERSION=$(curl -s https://api.github.com/repos/nullvoider07/the-eyes/
 RUN echo 'export DISPLAY=:0' >> /etc/profile.d/eye-env.sh \
     && echo 'export XAUTHORITY=/run/user/$(id -u)/gdm/Xauthority' >> /etc/profile.d/eye-env.sh \
     && chmod 644 /etc/profile.d/eye-env.sh
+
+# === Control Center - multi-OS Desktop Actuation Tool ===
+RUN LATEST_VERSION=$(curl -s https://api.github.com/repos/nullvoider07/control-center/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")') && \
+    VERSION_NUMBER=$(echo $LATEST_VERSION | sed 's/^v//') && \
+    echo "Installing Control Center version: ${LATEST_VERSION}" && \
+    curl -L -o /tmp/cc.tar.gz "https://github.com/nullvoider07/control-center/releases/download/${LATEST_VERSION}/control-center-${VERSION_NUMBER}-linux-x64.tar.gz" && \
+    tar -xzf /tmp/cc.tar.gz -C /tmp && \
+    mv /tmp/bin/control-center        /usr/local/bin/control-center && \
+    mv /tmp/bin/control-center-server /usr/local/bin/control-center-server && \
+    mv /tmp/bin/control-center-agent  /usr/local/bin/control-center-agent && \
+    chmod +x /usr/local/bin/control-center \
+              /usr/local/bin/control-center-server \
+              /usr/local/bin/control-center-agent && \
+    rm -rf /tmp/cc.tar.gz /tmp/bin
+
+# Install Python controller dependencies
+RUN pip install --no-cache-dir grpcio grpcio-tools click PyJWT psutil pyyaml
 
 # === 10. Configurations/Customizations ===
 # Override logind.conf

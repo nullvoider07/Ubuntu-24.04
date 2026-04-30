@@ -541,6 +541,9 @@ RUN LATEST_VERSION=$(curl -s https://api.github.com/repos/nullvoider07/control-c
 # Install Python controller dependencies
 RUN pip install --no-cache-dir grpcio grpcio-tools click PyJWT psutil pyyaml
 
+# === SWE-bench Evaluation Support ===
+RUN pip install --no-cache-dir pytest pytest-xdist
+
 # === 10. Configurations/Customizations ===
 # Override logind.conf
 COPY config/logind.conf /etc/systemd/logind.conf

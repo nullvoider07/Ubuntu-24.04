@@ -1,10 +1,10 @@
-# CUA Ubuntu 24.04
+# Ubuntu 24.04
 
-**AI Agent GUI Control Base**  
-**Version:** 0.1  
+**AI Agent Training Enviornment**  
+**Version:** 1 
 **Base Image:** Ubuntu 24.04 LTS  
 **Architecture:** x86_64  
-**Last Updated:** January 2026  
+**Last Updated:** April 2026  
 **Developer:** Kartik (NullVoider)
 
 ---
@@ -44,7 +44,7 @@
 
 ## Overview
 
-The **CUA Ubuntu 24.04 GPU Container** is a complete AI-ready development and automation environment designed for Computer Use Agents (CUA). It provides a full Ubuntu desktop experience with GPU acceleration, pre-configured development tools, and integrated monitoring capabilities.
+The **Ubuntu 24.04 AI Agent Training Enviornment** is a complete AI-ready development and automation environment designed for Computer Use Agents (CUA) and AI agent training. It provides a full Ubuntu desktop experience with GPU acceleration, pre-configured development tools, and integrated monitoring capabilities.
 
 ### Purpose
 
@@ -319,7 +319,7 @@ Pre-installed extensions:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    CUA Ubuntu Container                     │
+│             Ubuntu Agent Training Enviornment               │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
@@ -413,8 +413,8 @@ docker run --rm --gpus all nvidia/cuda:12.0-base nvidia-smi
 
 #### Clone Repository
 ```bash
-git clone https://github.com/nullvoider07/CUA-RL-Environment-Ubuntu-24.04.git
-cd CUA-RL-Environment-Ubuntu-24.04
+git clone https://github.com/nullvoider07/Ubuntu-24.04.git
+cd Ubuntu-24.04
 ```
 
 #### Build Command
@@ -1995,8 +1995,8 @@ docker events --filter 'event=exec_start'
 ### Project Structure
 
 ```
-cua-ubuntu/
-├── ubuntu-code-v0.1.dockerfile          # Main Dockerfile
+Ubuntu-24.04/
+├── ubuntu-code-v1.dockerfile          # Main Dockerfile
 ├── config/                              # Configuration files
 │   ├── systemd/                         # Systemd service files
 │   │   ├── create-disk.service
@@ -2015,7 +2015,7 @@ cua-ubuntu/
 ├── favourites/                          # Wallpapers and media
 │   └── 19228.jpg                        # Default wallpaper
 ├── README.md                            # This file
-└── cua-rl-environment-ubuntu-24.04.md   # Documentation
+└── Ubuntu-24.04.md   # Documentation
 ```
 
 ---
@@ -2085,8 +2085,8 @@ This project is licensed under the GPL-3.0 License - see the LICENSE file for de
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/nullvoider07/CUA-RL-Environment-Ubuntu-24.04/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/nullvoider07/CUA-RL-Environment-Ubuntu-24.04/discussions)
+- **Issues**: [GitHub Issues](https://github.com/nullvoider07/Ubuntu-24.04/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/nullvoider07/Ubuntu-24.04/discussions)
 - **Documentation**: This README
 ---
  
@@ -2096,8 +2096,8 @@ This project is licensed under the GPL-3.0 License - see the LICENSE file for de
 ---
 ## About This Project
 
-The CUA Ubuntu 24.04 GPU-accelerated Container was built from scratch through iterative testing and refinement. Every configuration, every feature, and every line of code was crafted to create production-ready RL Environment for Computer Use Agents development process.
+The Ubuntu 24.04 AI Agent Training Enviornment was built from scratch through iterative testing and refinement. Every configuration, every feature, and every line of code was crafted to create production-ready RL Environment for Computer Use Agents development process.
 
 If you find this project useful, encounter bugs, or have feature requests, feel free to reach out directly via [X (formerly Twitter)](https://x.com/nullvoider07).
 
-**CUA Ubuntu 24.04** - AI-ready development environment in a container 🚀
+**Ubuntu 24.04** - AI-ready development environment in a container 🚀

@@ -433,14 +433,14 @@ cd Ubuntu-24.04
 
 **Standard Build**:
 ```bash
-docker build -t cua-ubuntu:latest -f ubuntu-code-v0.1.dockerfile .
+docker build -t ubuntu-24.04-code:latest -f ubuntu-code-v0.1.dockerfile .
 ```
 
 **With Build Arguments**:
 ```bash
 docker build \
   --build-arg CONTAINER_ID=$(uuidgen | cut -c1-8) \
-  -t cua-ubuntu:latest \
+  -t ubuntu-24.04-code:latest \
   -f ubuntu-code-v0.1.dockerfile .
 ```
 
@@ -449,7 +449,7 @@ docker build \
 DOCKER_BUILDKIT=1 docker build \
   --progress=plain \
   --no-cache \
-  -t cua-ubuntu:latest \
+  -t ubuntu-24.04-code:latest \
   -f ubuntu-code-v0.1.dockerfile .
 ```
 
@@ -476,7 +476,7 @@ docker run -d \
   -p 8080:8080 \
   -p 9090:9090 \
   -p 2222:22 \
-  cua-ubuntu:latest
+  ubuntu-24.04-code:latest
 ```
 
 #### Production Run with Volumes
@@ -490,7 +490,7 @@ docker run -d \
   -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
   --cgroupns=host \
   -v ~/workspace:/workspace \
-  -v cua-home:/home/cua-$(docker run --rm cua-ubuntu:latest id -un 1001) \
+  -v cua-home:/home/cua-$(docker run --rm ubuntu-24.04-code:latest id -un 1001) \
   -v cua-data:/mnt/data \
   -p 4000:4000 \
   -p 7681:7681 \
@@ -500,7 +500,7 @@ docker run -d \
   -e CUA_DISK_SIZE=16G \
   -e API_TOKEN=your-secret-token \
   --restart unless-stopped \
-  cua-ubuntu:latest
+  ubuntu-24.04-code:latest
 ```
 
 #### Docker Compose
@@ -511,8 +511,8 @@ Create `docker-compose.yml`:
 version: '3.8'
 
 services:
-  cua-ubuntu:
-    image: cua-ubuntu:latest
+  ubuntu-24.04-code:
+    image: ubuntu-24.04-code:latest
     container_name: cua-dev
     hostname: cua-workstation
     privileged: true
@@ -645,7 +645,7 @@ docker-compose up -d
 ```bash
 docker run -d \
   -e CUA_DISK_SIZE=32G \
-  cua-ubuntu:latest
+  ubuntu-24.04-code:latest
 ```
 
 #### Change Desktop Wallpaper
@@ -653,7 +653,7 @@ docker run -d \
 Replace `favourites/19228.jpg` before building:
 ```bash
 cp ~/my-wallpaper.jpg favourites/19228.jpg
-docker build -t cua-ubuntu:custom .
+docker build -t ubuntu-24.04-code:custom .
 ```
 
 #### Modify GNOME Settings
@@ -1788,7 +1788,7 @@ docker run -d \
   --privileged --gpus all \
   -v ~/ml-workspace:/workspace \
   -p 4001:4000 -p 7682:7681 -p 8081:8080 \
-  cua-ubuntu:latest
+  ubuntu-24.04-code:latest
 
 # Project 2 - Web Development
 docker run -d \
@@ -1797,7 +1797,7 @@ docker run -d \
   --privileged --gpus all \
   -v ~/web-workspace:/workspace \
   -p 4002:4000 -p 7683:7681 -p 8082:8080 \
-  cua-ubuntu:latest
+  ubuntu-24.04-code:latest
 ```
 
 **Team Development**:
@@ -1813,7 +1813,7 @@ docker run -d --name cua-bob -p 4200:4000 ...
 
 **Minimal Variant** (no desktop):
 ```dockerfile
-FROM cua-ubuntu:latest
+FROM ubuntu-24.04-code:latest
 
 # Remove desktop components
 RUN apt-get purge -y gnome-shell gdm3 gnome-* && \
@@ -1824,7 +1824,7 @@ RUN apt-get purge -y gnome-shell gdm3 gnome-* && \
 
 **Data Science Variant**:
 ```dockerfile
-FROM cua-ubuntu:latest
+FROM ubuntu-24.04-code:latest
 
 # Install additional tools
 RUN pip install --no-cache-dir \
@@ -1843,7 +1843,7 @@ EXPOSE 8888
 
 **Game Development Variant**:
 ```dockerfile
-FROM cua-ubuntu:latest
+FROM ubuntu-24.04-code:latest
 
 # Install game engines
 RUN apt-get update && apt-get install -y \
@@ -1867,11 +1867,11 @@ build:
   services:
     - docker:dind
   script:
-    - docker build -t cua-ubuntu:$CI_COMMIT_SHA .
-    - docker push registry.example.com/cua-ubuntu:$CI_COMMIT_SHA
+    - docker build -t ubuntu-24.04-code:$CI_COMMIT_SHA .
+    - docker push registry.example.com/ubuntu-24.04-code:$CI_COMMIT_SHA
 
 test:
-  image: cua-ubuntu:$CI_COMMIT_SHA
+  image: ubuntu-24.04-code:$CI_COMMIT_SHA
   script:
     - python -m pytest tests/
     - npm test
@@ -1893,11 +1893,11 @@ jobs:
       
       - name: Build image
         run: |
-          docker build -t cua-ubuntu:latest .
+          docker build -t ubuntu-24.04-code:latest .
       
       - name: Test container
         run: |
-          docker run -d --name test-cua cua-ubuntu:latest
+          docker run -d --name test-cua ubuntu-24.04-code:latest
           sleep 60
           docker exec test-cua systemctl is-active gdm
 ```
@@ -1965,7 +1965,7 @@ done
 
 set -e
 
-IMAGE_NAME="cua-ubuntu:latest"
+IMAGE_NAME="ubuntu-24.04-code:latest"
 CONTAINER_NAME="cua-dev"
 
 echo "Building image..."
@@ -2011,7 +2011,7 @@ docker run -d --name cua-training \
   --gpus all --privileged \
   -v ~/training-data:/workspace/data \
   -p 8080:8080 \
-  cua-ubuntu:latest
+  ubuntu-24.04-code:latest
 
 # 2. Run agent tasks and collect screenshots
 # (Eye agent captures automatically)
@@ -2149,7 +2149,7 @@ docker run \
 **Docker Compose**:
 ```yaml
 services:
-  cua-ubuntu:
+  ubuntu-24.04-code:
     deploy:
       resources:
         limits:
@@ -2176,7 +2176,7 @@ docker run -d \
   -p 4000:4000 \
   -p 7681:7681 \
   -p 8080:8080 \
-  cua-ubuntu:latest
+  ubuntu-24.04-code:latest
 ```
 
 This approach gives systemd the capabilities it needs without full privileged access:
@@ -2187,8 +2187,8 @@ This approach gives systemd the capabilities it needs without full privileged ac
 **Docker Compose (Production)**:
 ```yaml
 services:
-  cua-ubuntu:
-    image: cua-ubuntu:latest
+  ubuntu-24.04-code:
+    image: ubuntu-24.04-code:latest
     cap_add:
       - SYS_ADMIN
       - SYS_RESOURCE
@@ -2205,8 +2205,8 @@ services:
 **Mount Sensitive Paths as Read-Only**:
 ```bash
 docker run \
-  -v ~/.ssh:/home/cua-$(docker run --rm cua-ubuntu id -un 1001)/.ssh:ro \
-  -v ~/.gitconfig:/home/cua-$(docker run --rm cua-ubuntu id -un 1001)/.gitconfig:ro \
+  -v ~/.ssh:/home/cua-$(docker run --rm ubuntu-24.04-code id -un 1001)/.ssh:ro \
+  -v ~/.gitconfig:/home/cua-$(docker run --rm ubuntu-24.04-code id -un 1001)/.gitconfig:ro \
   ...
 ```
 
@@ -2221,7 +2221,7 @@ echo "my-secret-token" | docker secret create eye_token -
 docker service create \
   --secret eye_token \
   --env EYE_AUTH_TOKEN_FILE=/run/secrets/eye_token \
-  cua-ubuntu:latest
+  ubuntu-24.04-code:latest
 ```
 
 **Use Environment File**:
@@ -2239,7 +2239,7 @@ docker run --env-file .env ...
 **Keep Base Image Updated**:
 ```bash
 # Rebuild regularly
-docker build --no-cache --pull -t cua-ubuntu:latest .
+docker build --no-cache --pull -t ubuntu-24.04-code:latest .
 
 # Update running container packages
 docker exec cua-dev apt-get update && \
@@ -2249,10 +2249,10 @@ docker exec cua-dev apt-get upgrade -y
 **Security Scanning**:
 ```bash
 # Scan image for vulnerabilities
-docker scan cua-ubuntu:latest
+docker scan ubuntu-24.04-code:latest
 
 # Or use Trivy
-trivy image cua-ubuntu:latest
+trivy image ubuntu-24.04-code:latest
 ```
 
 #### 8. Audit Logging
@@ -2300,7 +2300,7 @@ docker run -e API_TOKEN=your-secret-token ...
      --cap-add=NET_ADMIN \
      -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
      --cgroupns=host \
-     cua-ubuntu:latest
+     ubuntu-24.04-code:latest
    ```
    This provides systemd with necessary permissions without full privileged mode.
 

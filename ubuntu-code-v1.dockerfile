@@ -71,7 +71,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # NVIDIA Drivers (for GPU passthrough)
     libnvidia-egl-wayland1 mesa-utils nvidia-settings \
     # Misc
-    logrotate openssl network-manager \
+    logrotate openssl network-manager unzip \
     # Video/Graphics
     ffmpeg libx11-6 libxext6 libxrender1 libxrandr2 \
     libxtst6 libxcb1 libxcomposite1 libxdamage1 \
@@ -127,27 +127,27 @@ RUN mkdir -p /etc/docker && cat > /etc/docker/daemon.json <<'EOF'
 EOF
 
 # === 3. Programming Languages Installation and Setup ===
-# === Install Python 3.14.2 + pip 25.3 ===
+# === Install Python 3.14.4 + pip 26.0.1 ===
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential zlib1g-dev libncurses5-dev libgdbm-dev \
         libnss3-dev libssl-dev libreadline-dev libffi-dev \
         libsqlite3-dev libbz2-dev liblzma-dev uuid-dev curl \
-    && curl -L https://www.python.org/ftp/python/3.14.2/Python-3.14.2.tgz | tar xz \
-    && cd Python-3.14.2 \
+    && curl -L https://www.python.org/ftp/python/3.14.4/Python-3.14.4.tgz | tar xz \
+    && cd Python-3.14.4 \
     && ./configure --enable-optimizations --with-ensurepip=install \
     && make -j$(nproc) \
     && make altinstall \
-    && cd .. && rm -rf Python-3.14.2 \
+    && cd .. && rm -rf Python-3.14.4 \
     #&& apt-get purge -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev \
         #libnss3-dev libssl-dev libreadline-dev libffi-dev \
         #libsqlite3-dev libbz2-dev liblzma-dev uuid-dev \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip to exactly 25.3
+# Upgrade pip to exactly 26.0.1
 RUN python3.14 -m pip install --upgrade pip==26.0.1
 
-# Create symlinks so `python` and `pip` point to 3.14.2
+# Create symlinks so `python` and `pip` point to 3.14.4
 RUN update-alternatives --install /usr/bin/python python /usr/local/bin/python3.14 100 \
     && update-alternatives --install /usr/bin/pip pip /usr/local/bin/pip3.14 100
 
@@ -205,10 +205,10 @@ RUN wget -q https://download.oracle.com/java/25/latest/jdk-25_linux-x64_bin.tar.
     && update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk-25/bin/java 100 \
     && update-alternatives --install /usr/bin/javac javac /usr/lib/jvm/jdk-25/bin/javac 100
 
-# === Scala (3.7.4) ===
+# === Scala (3.8.3) ===
 RUN curl -fL https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz | gzip -d > /usr/local/bin/cs && \
     chmod +x /usr/local/bin/cs && \
-    /usr/local/bin/cs install --dir /usr/local/bin scala:3.7.4 scalac:3.7.4 && \
+    /usr/local/bin/cs install --dir /usr/local/bin scala:3.8.3 scalac:3.8.3 && \
     chown -R root:1001 /usr/local/bin/scala /usr/local/bin/scalac && \
     chmod -R 775 /usr/local/bin/scala /usr/local/bin/scalac && \
     /usr/local/bin/scala -version
@@ -218,7 +218,7 @@ ENV SCALA_HOME=/usr/local/scala \
     PATH=/usr/local/scala/bin:$PATH
 
 # === Go (Golang) ===
-RUN wget -q https://go.dev/dl/go1.25.5.linux-amd64.tar.gz -O /tmp/go.tar.gz \
+RUN wget -q https://go.dev/dl/go1.25.9.linux-amd64.tar.gz -O /tmp/go.tar.gz \
     && rm -rf /usr/local/go \
     && tar -C /usr/local -xzf /tmp/go.tar.gz \
     && rm /tmp/go.tar.gz
@@ -234,7 +234,7 @@ RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" "$GOPATH/pkg" \
     && chmod -R 755 "$GOPATH"
 
 # === Node.js & TypeScript ===
-RUN wget -q https://nodejs.org/dist/v25.2.1/node-v25.2.1-linux-x64.tar.xz -O /tmp/node.tar.xz \
+RUN wget -q https://nodejs.org/dist/v25.9.0/node-v25.9.0-linux-x64.tar.xz -O /tmp/node.tar.xz \
     && tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1 \
     && rm /tmp/node.tar.xz
 
@@ -244,12 +244,12 @@ ENV NPM_CONFIG_PREFIX=/usr/local/npm-global \
 
 # Create NPM Global Dir & Fix Permissions
 RUN mkdir -p $NPM_CONFIG_PREFIX \
-    && npm install -g --no-audit --no-fund npm@11.7.0 typescript@latest tsx@latest \
+    && npm install -g --no-audit --no-fund npm@11.13.0 typescript@latest tsx@latest \
     && chown -R 1001:1001 $NPM_CONFIG_PREFIX \
     && chmod -R 755 $NPM_CONFIG_PREFIX
 
 # === Kotlin ===
-RUN wget -q https://github.com/JetBrains/kotlin/releases/download/v2.3.0/kotlin-compiler-2.3.0.zip -O /tmp/kotlin.zip \
+RUN wget -q https://github.com/JetBrains/kotlin/releases/download/v2.3.21/kotlin-compiler-2.3.21.zip -O /tmp/kotlin.zip \
     && unzip -q /tmp/kotlin.zip -d /usr/local \
     && rm /tmp/kotlin.zip
 
@@ -384,10 +384,8 @@ RUN curl -fsSL https://github.com/tsl0922/ttyd/releases/download/1.7.7/ttyd.x86_
     chmod +x /usr/local/bin/ttyd
 
 # === PowerShell ===
-RUN wget -qO- https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb -O /tmp/ms.deb && \
-    dpkg -i /tmp/ms.deb && rm /tmp/ms.deb && \
-    apt-get update && apt-get install -y powershell && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends powershell \
+    && rm -rf /var/lib/apt/lists/*
 
 # === Brave ===
 RUN curl -fsS https://dl.brave.com/install.sh | sh
@@ -472,11 +470,14 @@ RUN add-apt-repository ppa:libreoffice/ppa -y \
     && rm -rf /var/lib/apt/lists/*
 
 # === NoMachine ===
-ENV NOMACHINE_VER=9.3.7
+ENV NOMACHINE_VER=9.4.14
 ENV NOMACHINE_REL=1
 
-COPY deps/nomachine_9.3.7_1_amd64.deb /tmp/nomachine.deb
-RUN apt-get update \
+RUN NOMACHINE_MAJOR_MINOR=$(echo "$NOMACHINE_VER" | cut -d. -f1,2) \
+    && curl -fsSL \
+       "https://download.nomachine.com/download/${NOMACHINE_MAJOR_MINOR}/Linux/nomachine_${NOMACHINE_VER}_${NOMACHINE_REL}_amd64.deb" \
+       -o /tmp/nomachine.deb \
+    && apt-get update \
     && apt-get install -y /tmp/nomachine.deb \
     && rm /tmp/nomachine.deb \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -544,6 +545,9 @@ RUN pip install --no-cache-dir grpcio grpcio-tools click PyJWT psutil pyyaml
 # === SWE-bench Evaluation Support ===
 RUN pip install --no-cache-dir pytest pytest-xdist
 
+# === Task Executor REST API Dependencies ===
+RUN pip install --no-cache-dir flask waitress
+
 # === 10. Configurations/Customizations ===
 # Override logind.conf
 COPY config/logind.conf /etc/systemd/logind.conf
@@ -584,6 +588,7 @@ RUN mkdir -p \
       /etc/systemd/system/graphical.target.wants && \
     ln -sf /etc/systemd/system/create-disk.service /etc/systemd/system/multi-user.target.wants/ && \
     ln -s /etc/systemd/system/supervisord.service /etc/systemd/system/multi-user.target.wants/ && \
+    ln -sf /etc/systemd/system/task-executor.service /etc/systemd/system/multi-user.target.wants/ && \
     ln -s /etc/systemd/system/gpu-setup.service /etc/systemd/system/graphical.target.wants/
 
 # Eye Agent Service
@@ -602,7 +607,7 @@ ENV container=docker \
     GDK_BACKEND=x11 \
     XDG_SESSION_TYPE=x11
 WORKDIR /workspace
-EXPOSE 4000 7681 2222 8080
+EXPOSE 4000 7681 2222 8080 9090
 STOPSIGNAL SIGRTMIN+3
 VOLUME /run
 RUN chown -R 1001:1001 /home/cua-*

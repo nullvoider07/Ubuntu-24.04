@@ -1,10 +1,10 @@
 # Ubuntu 24.04
 
-**AI Agent Training Enviornment**  
-**Version:** 1 
+**AI Agent Training & Evaluation Environment**  
+**Version:** 1  
 **Base Image:** Ubuntu 24.04 LTS  
 **Architecture:** x86_64  
-**Last Updated:** April 2026  
+**Last Updated:** May 2026  
 **Developer:** Kartik (NullVoider)
 
 ---
@@ -34,23 +34,25 @@
 8. [Development Environments](#development-environments)
 9. [Services & Daemons](#services--daemons)
 10. [The Eye Integration](#the-eye-integration)
-11. [Remote Access Methods](#remote-access-methods)
-12. [Troubleshooting](#troubleshooting)
-13. [Advanced Usage](#advanced-usage)
-14. [Security Considerations](#security-considerations)
-15. [About This Project](#about-this-project)
+11. [Task Executor API](#task-executor-api)
+12. [Remote Access Methods](#remote-access-methods)
+13. [Troubleshooting](#troubleshooting)
+14. [Advanced Usage](#advanced-usage)
+15. [Security Considerations](#security-considerations)
+16. [About This Project](#about-this-project)
 
 ---
 
 ## Overview
 
-The **Ubuntu 24.04 AI Agent Training Enviornment** is a complete AI-ready development and automation environment designed for Computer Use Agents (CUA) and AI agent training. It provides a full Ubuntu desktop experience with GPU acceleration, pre-configured development tools, and integrated monitoring capabilities.
+The **Ubuntu 24.04 AI Agent Training Environment** is a complete AI-ready development and automation environment designed for Computer Use Agents (CUA) and AI agent training. It provides a full Ubuntu desktop experience with GPU acceleration, pre-configured development tools, and integrated monitoring capabilities.
 
 ### Purpose
 
 This container is designed for:
 
 - **AI Agent Development**: Pre-configured environment for building and testing computer use agents
+- **Coding Agent Evaluation**: Integrated Task Executor API for running, scoring, and evaluating frontier coding agents against real repositories
 - **Remote Development**: Full-featured desktop accessible via NoMachine, web terminal, and SSH
 - **GPU-Accelerated Workloads**: NVIDIA GPU support with proper isolation and X11 configuration
 - **Multi-Language Development**: Support for 10+ programming languages out of the box
@@ -63,6 +65,8 @@ This container is designed for:
 - **Zero-Configuration GPU**: Automatic NVIDIA GPU detection and configuration
 - **Developer-Ready**: Pre-installed IDEs, tools, and language runtimes
 - **Production Monitoring**: Built-in screen capture for AI training and debugging
+- **Eval Harness**: Task Executor REST API for programmatic coding agent evaluation
+- **Multi-Framework Testing**: Built-in support for pytest, cargo, go test, jest, dotnet, and JUnit scoring
 - **Scale-Safe**: Dynamic username generation for running multiple containers
 
 ---
@@ -101,6 +105,14 @@ This container is designed for:
 ✅ **Persistent Storage** - 64GB virtual disk at `/mnt/data`  
 ✅ **Health Checks** - Built-in container health monitoring  
 ✅ **Log Management** - Centralized logging with rotation
+
+### Coding Agent Evaluation
+✅ **Task Executor API** - REST API for submitting and scoring coding tasks (port 9090)  
+✅ **Multi-Framework Scoring** - pytest, cargo test, go test, jest, dotnet test, JUnit/Maven/Gradle/sbt  
+✅ **Lint Integration** - Soft-score linting via ruff, mypy, flake8, clippy, eslint, and more  
+✅ **Diff Capture** - Records agent-produced diffs for analysis and comparison  
+✅ **Reference Patch Scoring** - Ground-truth patch similarity scoring (0.0–1.0) for patch-apply evals  
+✅ **API Authentication** - Optional bearer token auth via `API_TOKEN` environment variable
 
 ---
 
@@ -287,8 +299,8 @@ Pre-installed extensions:
 - Linux kernel 5.0+ (for systemd support)
 
 **Recommended**:
-- 16 GB RAM
-- 50 GB disk space
+- 12 GB RAM
+- 30 GB disk space
 - NVIDIA GPU (for GPU acceleration)
 - SSD storage
 
@@ -319,7 +331,7 @@ Pre-installed extensions:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│             Ubuntu Agent Training Enviornment               │
+│             Ubuntu Agent Training Environment               │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
@@ -421,14 +433,14 @@ cd Ubuntu-24.04
 
 **Standard Build**:
 ```bash
-docker build -t cua-ubuntu:latest -f ubuntu-code-v0.1.dockerfile .
+docker build -t ubuntu-24.04-code:latest -f ubuntu-code-v0.1.dockerfile .
 ```
 
 **With Build Arguments**:
 ```bash
 docker build \
   --build-arg CONTAINER_ID=$(uuidgen | cut -c1-8) \
-  -t cua-ubuntu:latest \
+  -t ubuntu-24.04-code:latest \
   -f ubuntu-code-v0.1.dockerfile .
 ```
 
@@ -437,7 +449,7 @@ docker build \
 DOCKER_BUILDKIT=1 docker build \
   --progress=plain \
   --no-cache \
-  -t cua-ubuntu:latest \
+  -t ubuntu-24.04-code:latest \
   -f ubuntu-code-v0.1.dockerfile .
 ```
 
@@ -462,8 +474,9 @@ docker run -d \
   -p 4000:4000 \
   -p 7681:7681 \
   -p 8080:8080 \
+  -p 9090:9090 \
   -p 2222:22 \
-  cua-ubuntu:latest
+  ubuntu-24.04-code:latest
 ```
 
 #### Production Run with Volumes
@@ -477,15 +490,17 @@ docker run -d \
   -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
   --cgroupns=host \
   -v ~/workspace:/workspace \
-  -v cua-home:/home/cua-$(docker run --rm cua-ubuntu:latest id -un 1001) \
+  -v cua-home:/home/cua-$(docker run --rm ubuntu-24.04-code:latest id -un 1001) \
   -v cua-data:/mnt/data \
   -p 4000:4000 \
   -p 7681:7681 \
   -p 8080:8080 \
+  -p 9090:9090 \
   -p 2222:22 \
   -e CUA_DISK_SIZE=16G \
+  -e API_TOKEN=your-secret-token \
   --restart unless-stopped \
-  cua-ubuntu:latest
+  ubuntu-24.04-code:latest
 ```
 
 #### Docker Compose
@@ -496,8 +511,8 @@ Create `docker-compose.yml`:
 version: '3.8'
 
 services:
-  cua-ubuntu:
-    image: cua-ubuntu:latest
+  ubuntu-24.04-code:
+    image: ubuntu-24.04-code:latest
     container_name: cua-dev
     hostname: cua-workstation
     privileged: true
@@ -521,12 +536,15 @@ services:
       - "4000:4000"   # NoMachine
       - "7681:7681"   # ttyd
       - "8080:8080"   # Eye Server
+      - "9090:9090"   # Task Executor API
       - "2222:22"     # SSH
     
     environment:
       - CUA_DISK_SIZE=8G
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
+      - API_TOKEN=your-secret-token
+      - TASK_MAX_AGE=3600
     
     cgroupns: host
 
@@ -555,6 +573,10 @@ docker-compose up -d
 | `XDG_SESSION_TYPE` | `x11` | Session type |
 | `GDK_BACKEND` | `x11` | GTK backend |
 | `CONTAINER_ID` | (auto) | Used for unique username generation |
+| `TASK_BASE_DIR` | `/workspace/tasks` | Working directory for Task Executor (task isolation, logs) |
+| `API_PORT` | `9090` | Port the Task Executor REST API listens on |
+| `API_TOKEN` | *(unset)* | Bearer token for Task Executor auth; auth disabled if unset |
+| `TASK_MAX_AGE` | `3600` | Seconds before completed/failed task records are evicted from memory |
 
 ### Volume Mounts
 
@@ -604,6 +626,7 @@ docker-compose up -d
 | 4000 | NoMachine | TCP | Remote desktop |
 | 7681 | ttyd | HTTP/WS | Web terminal |
 | 8080 | Eye Server | HTTP | Screen capture API |
+| 9090 | Task Executor | HTTP | Coding agent eval REST API |
 | 2222 | SSH | TCP | SSH access (optional) |
 
 **Custom Port Mapping**:
@@ -611,7 +634,8 @@ docker-compose up -d
 # Use different host ports
 -p 14000:4000 \
 -p 17681:7681 \
--p 18080:8080
+-p 18080:8080 \
+-p 19090:9090
 ```
 
 ### Customizing Container
@@ -621,7 +645,7 @@ docker-compose up -d
 ```bash
 docker run -d \
   -e CUA_DISK_SIZE=32G \
-  cua-ubuntu:latest
+  ubuntu-24.04-code:latest
 ```
 
 #### Change Desktop Wallpaper
@@ -629,7 +653,7 @@ docker run -d \
 Replace `favourites/19228.jpg` before building:
 ```bash
 cp ~/my-wallpaper.jpg favourites/19228.jpg
-docker build -t cua-ubuntu:custom .
+docker build -t ubuntu-24.04-code:custom .
 ```
 
 #### Modify GNOME Settings
@@ -1009,6 +1033,306 @@ eye agent start \
   --max-frames 100 \
   --no-notify
 ```
+
+---
+
+## Task Executor API
+
+### Overview
+
+The Task Executor is a REST API server (`task_executor_ubuntu.py`) that provides a programmatic interface for submitting, running, and scoring coding tasks inside the container. It is the primary evaluation harness for frontier coding agents.
+
+Each task goes through a fully isolated lifecycle: clone a repository at a specific commit, optionally apply the agent's patch, run the test suite, optionally run a linter, capture the diff, and score the result against a reference patch. Results are stored in memory and retrievable at any time via the task ID.
+
+**Why it exists**: Training and evaluating coding agents requires thousands of reproducible task executions with structured, machine-readable results. The Task Executor replaces ad-hoc script-based evaluation with a stable, scalable REST API designed for orchestrators, k8s deployments, and CI pipelines.
+
+---
+
+### Starting the Server
+
+The Task Executor is a Flask application served by Waitress. Start it as a background service:
+
+```bash
+# Basic start
+python3 /workspace/task_executor_ubuntu.py &
+
+# With custom port and auth token
+API_PORT=9090 API_TOKEN=your-secret-token python3 /workspace/task_executor_ubuntu.py &
+
+# Verify it's running
+curl http://localhost:9090/task/submit -X POST \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-secret-token" \
+  -d '{"repo_url":"invalid","test_command":"true"}' | jq .
+```
+
+**Add to Supervisor** for automatic startup and restart:
+
+```ini
+# /etc/supervisor/conf.d/task-executor.conf
+[program:task-executor]
+command=python3 /workspace/task_executor_ubuntu.py
+user=1001
+environment=API_PORT="9090",API_TOKEN="%(ENV_API_TOKEN)s",TASK_MAX_AGE="3600"
+autorestart=true
+startsecs=3
+stdout_logfile=/workspace/tasks/task_executor.log
+stderr_logfile=/workspace/tasks/task_executor.log
+priority=500
+```
+
+Then reload Supervisor:
+```bash
+supervisorctl reread && supervisorctl update
+supervisorctl status task-executor
+```
+
+---
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `TASK_BASE_DIR` | `/workspace/tasks` | Root directory for per-task workspaces and the executor log |
+| `API_PORT` | `9090` | Port the server binds to |
+| `API_TOKEN` | *(unset)* | Bearer token required on all requests; auth disabled when unset |
+| `TASK_MAX_AGE` | `3600` | Seconds after completion before a task record is evicted from memory |
+
+---
+
+### Authentication
+
+When `API_TOKEN` is set, every request must include an `Authorization` header:
+
+```
+Authorization: Bearer <token>
+```
+
+Requests without a valid token receive `401 Unauthorized`. If `API_TOKEN` is not set, authentication is disabled — appropriate for isolated k8s pods with network-level access control.
+
+---
+
+### REST API Reference
+
+#### POST /task/submit
+
+Submits a new task. Returns immediately with a `task_id`; execution runs in a background thread.
+
+**Request body (JSON)**:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `repo_url` | string | ✅ | Git-clonable URL of the repository to evaluate |
+| `test_command` | string | ✅ | Shell command to run from the repo root (e.g. `python3 -m pytest tests/ -x`) |
+| `base_commit` | string | ❌ | Commit, tag, or branch to check out (default: `HEAD`) |
+| `patch` | string | ❌ | Unified diff to apply via `git apply` before running tests |
+| `timeout` | int | ❌ | Seconds before the test process is killed (default: `300`) |
+| `lint_command` | string | ❌ | CLI lint command run after tests; result is a soft score only |
+| `capture_diff` | bool | ❌ | If `true`, capture `git diff <base_commit>` after tests (default: `false`) |
+| `reference_patch` | string | ❌ | Ground-truth unified diff; enables `patch_similarity` scoring |
+
+**Response** `202 Accepted`:
+```json
+{
+  "task_id": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "pending"
+}
+```
+
+**Example — pytest with lint and diff capture**:
+```bash
+curl -X POST http://localhost:9090/task/submit \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-secret-token" \
+  -d '{
+    "repo_url": "https://github.com/psf/requests",
+    "base_commit": "v2.31.0",
+    "patch": "<agent unified diff>",
+    "test_command": "python3 -m pytest tests/ -x --tb=short",
+    "timeout": 300,
+    "lint_command": "ruff check . --output-format json",
+    "capture_diff": true
+  }'
+```
+
+**Example — SWE-bench style with reference patch**:
+```bash
+curl -X POST http://localhost:9090/task/submit \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-secret-token" \
+  -d '{
+    "repo_url": "https://github.com/django/django",
+    "base_commit": "abc123def456",
+    "patch": "<agent patch>",
+    "test_command": "python3 -m pytest tests/test_feature.py",
+    "reference_patch": "<ground truth patch>",
+    "capture_diff": true
+  }'
+```
+
+---
+
+#### GET /task/\<task_id\>
+
+Lightweight status poll. Returns only `task_id` and `status` — no output payloads.
+
+**Response** `200`:
+```json
+{
+  "task_id": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "pending"
+}
+```
+
+**Status values**: `pending` → `running` → `completed` | `failed`
+
+```bash
+curl http://localhost:9090/task/550e8400-e29b-41d4-a716-446655440000 \
+  -H "Authorization: Bearer your-secret-token"
+```
+
+---
+
+#### GET /task/\<task_id\>/result
+
+Returns full task results. Returns `202` while still running.
+
+**Response** `200` (completed or failed):
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `task_id` | string | UUID of the task |
+| `status` | string | `completed` or `failed` |
+| `exit_code` | int | Exit code of the test command |
+| `stdout` | string | Combined stdout from all steps |
+| `stderr` | string | Combined stderr from all steps |
+| `tests_passed` | int | Number of tests that passed |
+| `tests_failed` | int | Number of tests that failed or errored |
+| `lint_errors` | int \| null | Error count from linter; `null` if no `lint_command` was provided |
+| `lint_output` | string \| null | Raw stdout+stderr from the linter |
+| `patch_diff` | string \| null | Output of `git diff <base_commit>`; `null` if not requested |
+| `patch_similarity` | float \| null | Similarity ratio 0.0–1.0 vs `reference_patch`; `null` if no reference provided |
+| `execution_time` | float | Total wall-clock seconds from start to finish |
+
+**Example response**:
+```json
+{
+  "task_id": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "completed",
+  "exit_code": 0,
+  "stdout": "...",
+  "stderr": "",
+  "tests_passed": 47,
+  "tests_failed": 0,
+  "lint_errors": 3,
+  "lint_output": "Found 3 errors.",
+  "patch_diff": "diff --git a/src/foo.py ...",
+  "patch_similarity": 0.9214,
+  "execution_time": 38.452
+}
+```
+
+```bash
+curl http://localhost:9090/task/550e8400-e29b-41d4-a716-446655440000/result \
+  -H "Authorization: Bearer your-secret-token" | jq .
+```
+
+---
+
+#### DELETE /task/\<task_id\>
+
+Removes a task record from memory. Does not cancel a running task — to cancel, submit with a short `timeout` value.
+
+**Response** `200`:
+```json
+{
+  "task_id": "550e8400-e29b-41d4-a716-446655440000",
+  "deleted": true
+}
+```
+
+```bash
+curl -X DELETE http://localhost:9090/task/550e8400-e29b-41d4-a716-446655440000 \
+  -H "Authorization: Bearer your-secret-token"
+```
+
+---
+
+### Supported Test Frameworks
+
+The executor auto-detects the test framework from `test_command` and routes to the appropriate parser.
+
+| Test command contains | Parser | Output format parsed |
+|-----------------------|--------|----------------------|
+| `pytest`, `py.test` | pytest | `5 passed, 2 failed, 1 error in 3.14s` |
+| `cargo` | cargo test | `test result: ok. 5 passed; 0 failed` |
+| `go test` | go test | `--- PASS/FAIL:` lines; `ok`/`FAIL` package lines |
+| `jest`, `npm test`, `yarn test`, `pnpm test` | Jest | `Tests: 2 failed, 5 passed, 7 total` |
+| `dotnet` | dotnet test | `Failed: 2, Passed: 3, Total: 5` |
+| `mvn`, `gradle`, `sbt`, `junit` | JUnit/Surefire | `Tests run: 7, Failures: 2, Errors: 0` |
+
+For unrecognised commands, all parsers are tried in order and the first non-zero result is used.
+
+---
+
+### Supported Linters
+
+The executor auto-detects the linter from `lint_command`. Lint results are always a **soft score** — they are recorded in `lint_errors` and `lint_output` but never change `status` or `exit_code`. This is consistent with the convention used by SWE-bench, HumanEval, and LiveCodeBench.
+
+| Linter | Language | Example `lint_command` |
+|--------|----------|------------------------|
+| `ruff` | Python | `ruff check . --output-format json` |
+| `flake8` | Python | `flake8 src/` |
+| `mypy` | Python | `mypy src/ --ignore-missing-imports` |
+| `pylint` | Python | `pylint src/` |
+| `cargo clippy` | Rust | `cargo clippy -- -D warnings` |
+| `cargo check` | Rust | `cargo check` |
+| `eslint` | JS/TS | `eslint src/ --format json` |
+| `go vet` | Go | `go vet ./...` |
+| `staticcheck` | Go | `staticcheck ./...` |
+| `clang-tidy` | C/C++ | `clang-tidy src/*.cpp` |
+| `cppcheck` | C/C++ | `cppcheck --error-exitcode=1 src/` |
+| `dotnet build` | C# | `dotnet build --no-restore` |
+
+For unrecognised linters, the executor falls back to counting occurrences of the word `error` in the output when the exit code is non-zero.
+
+---
+
+### Polling Pattern
+
+The recommended polling approach for an orchestrator:
+
+```python
+import time, requests
+
+BASE = "http://localhost:9090"
+HEADERS = {"Authorization": "Bearer your-secret-token"}
+
+# Submit
+r = requests.post(f"{BASE}/task/submit", json={
+    "repo_url": "https://github.com/example/repo",
+    "test_command": "python3 -m pytest tests/",
+    "lint_command": "ruff check .",
+    "capture_diff": True,
+}, headers=HEADERS)
+task_id = r.json()["task_id"]
+
+# Poll status
+while True:
+    s = requests.get(f"{BASE}/task/{task_id}", headers=HEADERS).json()
+    if s["status"] not in ("pending", "running"):
+        break
+    time.sleep(3)
+
+# Fetch full result
+result = requests.get(f"{BASE}/task/{task_id}/result", headers=HEADERS).json()
+print(f"Passed: {result['tests_passed']}  Failed: {result['tests_failed']}  "
+      f"Lint errors: {result['lint_errors']}  Similarity: {result['patch_similarity']}")
+
+# Clean up
+requests.delete(f"{BASE}/task/{task_id}", headers=HEADERS)
+```
+
 
 ---
 
@@ -1464,7 +1788,7 @@ docker run -d \
   --privileged --gpus all \
   -v ~/ml-workspace:/workspace \
   -p 4001:4000 -p 7682:7681 -p 8081:8080 \
-  cua-ubuntu:latest
+  ubuntu-24.04-code:latest
 
 # Project 2 - Web Development
 docker run -d \
@@ -1473,7 +1797,7 @@ docker run -d \
   --privileged --gpus all \
   -v ~/web-workspace:/workspace \
   -p 4002:4000 -p 7683:7681 -p 8082:8080 \
-  cua-ubuntu:latest
+  ubuntu-24.04-code:latest
 ```
 
 **Team Development**:
@@ -1489,7 +1813,7 @@ docker run -d --name cua-bob -p 4200:4000 ...
 
 **Minimal Variant** (no desktop):
 ```dockerfile
-FROM cua-ubuntu:latest
+FROM ubuntu-24.04-code:latest
 
 # Remove desktop components
 RUN apt-get purge -y gnome-shell gdm3 gnome-* && \
@@ -1500,7 +1824,7 @@ RUN apt-get purge -y gnome-shell gdm3 gnome-* && \
 
 **Data Science Variant**:
 ```dockerfile
-FROM cua-ubuntu:latest
+FROM ubuntu-24.04-code:latest
 
 # Install additional tools
 RUN pip install --no-cache-dir \
@@ -1519,7 +1843,7 @@ EXPOSE 8888
 
 **Game Development Variant**:
 ```dockerfile
-FROM cua-ubuntu:latest
+FROM ubuntu-24.04-code:latest
 
 # Install game engines
 RUN apt-get update && apt-get install -y \
@@ -1543,11 +1867,11 @@ build:
   services:
     - docker:dind
   script:
-    - docker build -t cua-ubuntu:$CI_COMMIT_SHA .
-    - docker push registry.example.com/cua-ubuntu:$CI_COMMIT_SHA
+    - docker build -t ubuntu-24.04-code:$CI_COMMIT_SHA .
+    - docker push registry.example.com/ubuntu-24.04-code:$CI_COMMIT_SHA
 
 test:
-  image: cua-ubuntu:$CI_COMMIT_SHA
+  image: ubuntu-24.04-code:$CI_COMMIT_SHA
   script:
     - python -m pytest tests/
     - npm test
@@ -1569,11 +1893,11 @@ jobs:
       
       - name: Build image
         run: |
-          docker build -t cua-ubuntu:latest .
+          docker build -t ubuntu-24.04-code:latest .
       
       - name: Test container
         run: |
-          docker run -d --name test-cua cua-ubuntu:latest
+          docker run -d --name test-cua ubuntu-24.04-code:latest
           sleep 60
           docker exec test-cua systemctl is-active gdm
 ```
@@ -1641,7 +1965,7 @@ done
 
 set -e
 
-IMAGE_NAME="cua-ubuntu:latest"
+IMAGE_NAME="ubuntu-24.04-code:latest"
 CONTAINER_NAME="cua-dev"
 
 echo "Building image..."
@@ -1687,7 +2011,7 @@ docker run -d --name cua-training \
   --gpus all --privileged \
   -v ~/training-data:/workspace/data \
   -p 8080:8080 \
-  cua-ubuntu:latest
+  ubuntu-24.04-code:latest
 
 # 2. Run agent tasks and collect screenshots
 # (Eye agent captures automatically)
@@ -1825,7 +2149,7 @@ docker run \
 **Docker Compose**:
 ```yaml
 services:
-  cua-ubuntu:
+  ubuntu-24.04-code:
     deploy:
       resources:
         limits:
@@ -1852,7 +2176,7 @@ docker run -d \
   -p 4000:4000 \
   -p 7681:7681 \
   -p 8080:8080 \
-  cua-ubuntu:latest
+  ubuntu-24.04-code:latest
 ```
 
 This approach gives systemd the capabilities it needs without full privileged access:
@@ -1863,8 +2187,8 @@ This approach gives systemd the capabilities it needs without full privileged ac
 **Docker Compose (Production)**:
 ```yaml
 services:
-  cua-ubuntu:
-    image: cua-ubuntu:latest
+  ubuntu-24.04-code:
+    image: ubuntu-24.04-code:latest
     cap_add:
       - SYS_ADMIN
       - SYS_RESOURCE
@@ -1881,8 +2205,8 @@ services:
 **Mount Sensitive Paths as Read-Only**:
 ```bash
 docker run \
-  -v ~/.ssh:/home/cua-$(docker run --rm cua-ubuntu id -un 1001)/.ssh:ro \
-  -v ~/.gitconfig:/home/cua-$(docker run --rm cua-ubuntu id -un 1001)/.gitconfig:ro \
+  -v ~/.ssh:/home/cua-$(docker run --rm ubuntu-24.04-code id -un 1001)/.ssh:ro \
+  -v ~/.gitconfig:/home/cua-$(docker run --rm ubuntu-24.04-code id -un 1001)/.gitconfig:ro \
   ...
 ```
 
@@ -1897,7 +2221,7 @@ echo "my-secret-token" | docker secret create eye_token -
 docker service create \
   --secret eye_token \
   --env EYE_AUTH_TOKEN_FILE=/run/secrets/eye_token \
-  cua-ubuntu:latest
+  ubuntu-24.04-code:latest
 ```
 
 **Use Environment File**:
@@ -1915,7 +2239,7 @@ docker run --env-file .env ...
 **Keep Base Image Updated**:
 ```bash
 # Rebuild regularly
-docker build --no-cache --pull -t cua-ubuntu:latest .
+docker build --no-cache --pull -t ubuntu-24.04-code:latest .
 
 # Update running container packages
 docker exec cua-dev apt-get update && \
@@ -1925,10 +2249,10 @@ docker exec cua-dev apt-get upgrade -y
 **Security Scanning**:
 ```bash
 # Scan image for vulnerabilities
-docker scan cua-ubuntu:latest
+docker scan ubuntu-24.04-code:latest
 
 # Or use Trivy
-trivy image cua-ubuntu:latest
+trivy image ubuntu-24.04-code:latest
 ```
 
 #### 8. Audit Logging
@@ -1951,6 +2275,21 @@ docker logs -f cua-dev
 docker events --filter 'event=exec_start'
 ```
 
+
+#### 9. Secure the Task Executor API
+
+**Set an API token** for all non-isolated deployments:
+```bash
+docker run -e API_TOKEN=your-secret-token ...
+```
+
+**Restrict the port to localhost** if the orchestrator is on the same host:
+```bash
+-p 127.0.0.1:9090:9090
+```
+
+**Note**: `test_command` and `lint_command` are executed with `shell=True` inside the container. Ensure the agent or orchestrator submitting tasks is trusted, or run the container with network-level access control in addition to `API_TOKEN`.
+
 ### Best Practices
 
 1. **Use specific capabilities instead of --privileged** - For production, run with required capabilities only:
@@ -1961,7 +2300,7 @@ docker events --filter 'event=exec_start'
      --cap-add=NET_ADMIN \
      -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
      --cgroupns=host \
-     cua-ubuntu:latest
+     ubuntu-24.04-code:latest
    ```
    This provides systemd with necessary permissions without full privileged mode.
 
@@ -2014,13 +2353,61 @@ Ubuntu-24.04/
 │   └── eye-daemon.sh                    # Eye agent wrapper
 ├── favourites/                          # Wallpapers and media
 │   └── 19228.jpg                        # Default wallpaper
+├── task_executor.py              # Task Executor REST API server
 ├── README.md                            # This file
-└── Ubuntu-24.04.md   # Documentation
+└── Ubuntu-24.04.md                      # Documentation
 ```
 
 ---
 
 ## FAQ
+
+
+### Coding Agent Evaluation Questions
+
+**Q: What is the Task Executor API?**  
+A: It is a REST API (`task_executor_ubuntu.py`) running on port 9090 that provides a programmatic interface for submitting coding tasks, running test suites, linting, capturing diffs, and scoring agent outputs. It is designed for evaluating frontier coding agents at scale.
+
+**Q: How do I start the Task Executor?**  
+A: Run `python3 /workspace/task_executor_ubuntu.py &` or add it to Supervisor using the config shown in the Task Executor API section. Set `API_TOKEN` for authenticated deployments.
+
+**Q: Why is lint scoring "soft" — why doesn't it fail the task?**  
+A: The majority of established coding benchmarks (SWE-bench, HumanEval, LiveCodeBench) use test pass/fail as the primary correctness signal. Lint errors reflect code quality but not functional correctness. Keeping lint as a soft score lets you track quality trends without invalidating otherwise correct solutions.
+
+**Q: What is `patch_similarity` and when is it useful?**  
+A: It is a 0.0–1.0 similarity ratio between the agent's actual diff and a ground-truth reference patch, computed after stripping all unified diff metadata. It is most useful for patch-apply evals where a canonical solution exists. A score of 1.0 means the agent produced an identical fix; lower scores indicate different but potentially still correct solutions — always interpret alongside `tests_passed`.
+
+**Q: Can the Task Executor run tasks in parallel?**  
+A: Yes. Each submitted task runs in an independent background thread with its own isolated workspace under `TASK_BASE_DIR`. For large-scale parallelism, deploy multiple container replicas behind a k8s orchestrator — each replica maintains its own in-memory task store. Use the orchestrator's Redis layer for cross-replica state if needed.
+
+**Q: What happens if a task times out?**  
+A: The entire process group is killed via `os.killpg + SIGKILL`, ensuring no orphan processes remain. The task is marked `failed` with the timeout error in `stderr`. Use the `timeout` field in the submit body to tune per-task limits.
+
+**Q: Does the Task Executor support languages other than Python?**  
+A: Yes — pytest, cargo test, go test, jest, dotnet test, and JUnit/Maven/Gradle/sbt are all supported out of the box. The executor auto-detects the framework from `test_command`. All language runtimes listed in the Development Environments section are available.
+
+**Q: How do I access the Task Executor from outside the container in a remote deployment?**  
+A: The Task Executor binds to `0.0.0.0:9090` so it is reachable on the container's network interface. In a k8s deployment, expose it via a `ClusterIP` service for internal orchestrator access, or a `NodePort`/`LoadBalancer` service for external access. Always set `API_TOKEN` when the port is reachable outside a trusted network boundary.
+
+**Q: In a k8s deployment with many replicas, how does an orchestrator route tasks to a specific container?**  
+A: Each replica runs its own Task Executor with its own in-memory task store. The orchestrator should track the pod IP (or service endpoint) it submitted to and send the status/result poll to the same pod — not through a load-balanced service that might route to a different replica. Use a `headless` k8s service to get per-pod DNS entries, or record the pod IP at submission time.
+
+**Q: What happens to in-flight tasks if a pod is evicted or restarted?**  
+A: In-flight tasks are lost — the in-memory store does not survive a restart. The orchestrator should treat a lost connection or a `404 Task not found` response as a signal to resubmit. For mission-critical eval pipelines, implement retry logic on the orchestrator side rather than relying on the executor to recover state.
+
+**Q: How do I pass `API_TOKEN` securely across a k8s cluster?**  
+A: Mount it as a k8s `Secret` and expose it as an environment variable. Never hardcode it in the pod spec or Dockerfile:
+```yaml
+env:
+  - name: API_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: task-executor-secret
+        key: api-token
+```
+
+**Q: Can I run the Task Executor behind an ingress or reverse proxy?**  
+A: Yes. The API is stateless at the HTTP layer — any proxy (nginx, Traefik, etc.) can sit in front of it. Be aware that long-running tasks can exceed default proxy timeouts; set your proxy's read timeout to at least `timeout + 60` seconds, or use the lightweight `GET /task/<id>` poll endpoint instead of holding a connection open on `/result`.
 
 ### General Questions
 
@@ -2090,13 +2477,15 @@ This project is licensed under the GPL-3.0 License - see the LICENSE file for de
 - **Documentation**: This README
 ---
  
-**Last Updated:** January 11, 2026  
+**Last Updated:** May 2026  
 **Developer:** Kartik (NullVoider)
 
 ---
 ## About This Project
 
-The Ubuntu 24.04 AI Agent Training Enviornment was built from scratch through iterative testing and refinement. Every configuration, every feature, and every line of code was crafted to create production-ready RL Environment for Computer Use Agents development process.
+The Ubuntu 24.04 AI Agent Training & Evaluation Environment was built from scratch through iterative testing and refinement. Every configuration, feature, and line of code was crafted to create a production-ready isolated environment for AI agent development.
+
+Version 1 extends the original CUA-focused environment into a full coding agent evaluation platform. The Task Executor API — covering multi-framework test scoring, programmatic lint integration, diff capture, and ground-truth patch similarity scoring — was designed to support the rigorous evaluation requirements of frontier coding agent research, including SWE-bench-style workflows and beyond.
 
 If you find this project useful, encounter bugs, or have feature requests, feel free to reach out directly via [X (formerly Twitter)](https://x.com/nullvoider07).
 

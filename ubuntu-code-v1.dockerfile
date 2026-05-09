@@ -147,9 +147,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Upgrade pip to exactly 26.0.1
 RUN python3.14 -m pip install --upgrade pip==26.0.1
 
+# === Install uv (Astral's high-performance package manager) ===
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
+    && mv /root/.cargo/bin/uv /usr/local/bin/uv \
+    && mv /root/.cargo/bin/uvx /usr/local/bin/uvx
+
 # Create symlinks so `python` and `pip` point to 3.14.4
 RUN update-alternatives --install /usr/bin/python python /usr/local/bin/python3.14 100 \
     && update-alternatives --install /usr/bin/pip pip /usr/local/bin/pip3.14 100
+
+# Set uv environment variables
+ENV UV_SYSTEM_PYTHON=1
+ENV UV_LINK_MODE=copy
 
 # Ensure venv is available (standard for AI/coding workflows)
 RUN python3.14 -m ensurepip --upgrade

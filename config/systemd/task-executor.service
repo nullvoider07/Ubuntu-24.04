@@ -1,0 +1,34 @@
+[Unit]
+Description=Task Executor REST API
+Documentation=https://github.com/nullvoider07/Ubuntu-24.04
+# Start after the network is up and the desktop session is ready
+After=network.target gdm.service
+Wants=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python /usr/local/bin/task_executor.py
+Restart=always
+RestartSec=5
+
+# Run as the cua user so task workspaces land under /workspace
+# which is owned by cua (set in the Dockerfile)
+User=cua
+Group=cua
+
+# Ensure the task base directory exists before starting
+RuntimeDirectory=tasks
+WorkingDirectory=/workspace
+
+# Logs are also written to /workspace/tasks/task_executor.log by the service
+# itself, but systemd captures stdout/stderr here as well
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=task-executor
+
+# Environment overrides — adjust here if needed
+Environment=API_PORT=9090
+Environment=TASK_BASE_DIR=/workspace/tasks
+
+[Install]
+WantedBy=multi-user.target
